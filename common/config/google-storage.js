@@ -38,4 +38,11 @@ module.exports = {
       '51 * * * *',
     workers: process.env.DATASTORE_WORKERS || 3,
   },
+
+  registry: {
+    api_url: process.env.REGISTRY_API_URL ||
+      'https://iatiregistry.org/api/3',
+    cronschedule: process.env.REGISTRY_CRONSCHEDULE ||
+      '* 2 * * *',
+  },
 };
