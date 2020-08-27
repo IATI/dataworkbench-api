@@ -13,10 +13,28 @@ const getPublishers = async () => {
   const organisationListResponse =
     await axios.get(googleStorageConfig.registry.api_url + `/action/organization_list`);
 
+  if (organisationListResponse.status != 200) {
+    console.error('IATI Registry returned other than 200 - specifically ' + organisationListResponse.status);
+    return;
+  }
+
   const organisationList = organisationListResponse.data.result;
+
+  let existing = await Publisher.find({},{slug:1,_id:0});
+
+  for (let n=0; n<existing.length; n++) {
+      if ( ! organisationList.includes(existing[n].slug)) {
+        console.log(slug + ' no longer present in the Registry - removing.')
+        Publisher.deleteOne({slug: existing[n].slug})
+      }
+  }
+
+  console.log('Upserting ' + organisationList.length + ' organisations...');
 
   for (let i=0; i<organisationList.length; i++) {
     let slug = organisationList[i];
+
+    existing = Publisher.find({},{slug:1,_id:0});
 
     let orgResponse = await axios.get(googleStorageConfig.registry.api_url + `/action/organization_show?id=` + slug);
 
@@ -38,7 +56,8 @@ const getPublishers = async () => {
         console.error(err);
       }
     });
-  }
+  }  
+
   console.log('registry sync completed');
 };
 
