@@ -14,7 +14,7 @@ const getPublishers = async () => {
     await axios.get(googleStorageConfig.registry.api_url + `/action/organization_list`);
 
   if (organisationListResponse.status != 200) {
-    console.error('IATI Registry returned other than 200 - specifically ' + organisationListResponse.status);
+    console.error('IATI Registry returned other than 200 when getting the list of orgs - specifically ' + organisationListResponse.status);
     return;
   }
 
@@ -38,6 +38,11 @@ const getPublishers = async () => {
 
     let orgResponse = await axios.get(googleStorageConfig.registry.api_url + `/action/organization_show?id=` + slug);
 
+    if (orgResponse.status != 200) {
+      console.error('IATI Registry returned other than 200 getting details for ' + slug + ' - specifically ' + organisationListResponse.status);
+      continue;
+    }
+
     let orgData = orgResponse.data.result;
 
     Publisher.upsert(new Publisher({
@@ -60,8 +65,6 @@ const getPublishers = async () => {
 
   console.log('registry sync completed');
 };
-
-getPublishers();
 
 const job = schedule.scheduleJob(googleStorageConfig.registry.cronschedule, () => {
   getPublishers();

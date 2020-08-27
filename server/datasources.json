@@ -5,26 +5,25 @@
     "maxFileSize": "250000000",
     "provider": "filesystem",
     "root": "./test/tmp"
-  },
-  "iati-publishers": {
-    "name": "iati-publishers",
-    "connector": "memory",
-    "allowExtendedOperators": true
+  },"iati-publishers": {
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
   },
   "iati-datasets": {
-    "name": "iati-datasets",
-    "connector": "memory",
-    "allowExtendedOperators": true
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
   },
   "workspaces": {
-    "name": "workspaces",
-    "connector": "memory",
-    "allowExtendedOperators": true
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
   },
   "versions": {
-    "name": "versions",
-    "connector": "memory",
-    "allowExtendedOperators": true
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
+  },
+  "iati-testdatasets": {
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
   },
   "iati-testfilestore": {
     "name": "iati-testfilestore",
@@ -34,14 +33,11 @@
     "provider": "filesystem",
     "root": "./test/tmp"
   },
-  "iati-testdatasets": {
-    "name": "iati-testdatasets",
-    "connector": "memory",
-    "allowExtendedOperators": true
-  },
   "iati-testworkspaces": {
-    "name": "iati-testworkspaces",
-    "connector": "memory",
-    "allowExtendedOperators": true
+    "connector": "mongodb",
+    "url": "mongodb://localhost/local-validator"
   }
 }
+
+
+
