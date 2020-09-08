@@ -5,6 +5,8 @@ const schedule = require('node-schedule');
 const app = require('../../server');
 
 const Publisher = app.models['iati-publisher'];
+const Workspace = app.models['workspace'];
+const Version = app.models['version'];
 // TODO: rename googleStorageConfig to more generic config identifier
 const googleStorageConfig = require('../../../common/config/google-storage');
 
@@ -24,8 +26,8 @@ const getPublishers = async () => {
 
   for (let n=0; n<existing.length; n++) {
       if ( ! organisationList.includes(existing[n].slug)) {
-        console.log(slug + ' no longer present in the Registry - removing.')
-        Publisher.deleteOne({slug: existing[n].slug})
+        console.log(existing[n].slug + ' no longer present in the Registry - removing.')
+        Publisher.destroyAll({slug: existing[n].slug})
       }
   }
 
@@ -61,10 +63,20 @@ const getPublishers = async () => {
         console.error(err);
       }
     });
+
+    let workspace = await Workspace.upsert(new Workspace({      
+        slug : "public",
+        'owner-slug' : orgData.name,
+        title : "Public data",
+        description : "IATI files published in the IATI Registry",
+        'iati-publisherId' : orgData.id     
+    }))
   }  
 
   console.log('registry sync completed');
 };
+
+getPublishers();
 
 const job = schedule.scheduleJob(googleStorageConfig.registry.cronschedule, () => {
   getPublishers();
