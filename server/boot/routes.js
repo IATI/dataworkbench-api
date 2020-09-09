@@ -5,7 +5,7 @@ const monDataset = require('../../common/mongoose/dataset');
 
 module.exports = function(app) {
   app.get('/api/v1/queue/next', async function(req, res) {
-    let ds = await monDataset.findOne({ $or : [ { "json_updated" : { "$exists" : false }}, { "processing" : { "$exists" : false }} ] }).sort({ 'downloaded' : "asc"});
+    let ds = await monDataset.findOne({ "processing" : { "$exists" : false }}).sort({ 'downloaded' : "asc"});
 
     return res.send(ds);
   });
