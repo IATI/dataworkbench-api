@@ -37,6 +37,7 @@ module.exports = {
     cronschedule: process.env.DATASTORE_CRONSCHEDULE ||
       '51 * * * *',
     workers: process.env.DATASTORE_WORKERS || 3,
+    mongourl: process.env.MONGOOSE_CONNECT || 'mongodb://localhost:27017/local-validator'
   },
 
   registry: {

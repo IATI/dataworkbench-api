@@ -1,5 +1,6 @@
 let mongoose = require('mongoose')
-mongoose.connect('mongodb://localhost:27017/local-validator', {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+const googleStorageConfig = require('../../common/config/google-storage');
+mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
 const monDataset = require('../../common/mongoose/dataset');
 
@@ -14,12 +15,17 @@ module.exports = function(app) {
     const now = new Date().toISOString();
 
     const md5 = req.body.md5;
+    const id = req.body.id;
+
+    if ( ! id) {
+      return res.status(400).send('id missing')
+    }
 
     if ( ! md5) {
       return res.status(400).send('MD5 missing')
     }
   
-    let ds = await monDataset.findOne({ md5: md5 });
+    let ds = await monDataset.findOne({ id: id });
 
     if ( ! ds) {
       return res.status(400).send('Record with that MD5 not found')

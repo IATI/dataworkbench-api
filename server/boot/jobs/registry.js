@@ -28,6 +28,7 @@ const getPublishers = async () => {
       if ( ! organisationList.includes(existing[n].slug)) {
         console.log(existing[n].slug + ' no longer present in the Registry - removing.')
         Publisher.destroyAll({slug: existing[n].slug})
+        Workspace.destroyAll({'owner-slug': existing[n].slug})
       }
   }
 
@@ -64,7 +65,8 @@ const getPublishers = async () => {
       }
     });
 
-    let workspace = await Workspace.upsert(new Workspace({      
+    let workspace = await Workspace.upsert(new Workspace({   
+        id: orgData.id,   
         slug : "public",
         'owner-slug' : orgData.name,
         title : "Public data",
@@ -79,7 +81,7 @@ const getPublishers = async () => {
 getPublishers();
 
 const job = schedule.scheduleJob(googleStorageConfig.registry.cronschedule, () => {
-  getPublishers();
+  //getPublishers();
 });
 
 module.exports = {name: 'registry', job};

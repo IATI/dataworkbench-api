@@ -110,7 +110,6 @@
     },
     "sha1": {
       "type": "string",
-      "id": true,
       "required": true,
       "description": "Datastore hash"
     }

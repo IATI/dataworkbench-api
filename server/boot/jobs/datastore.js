@@ -15,28 +15,12 @@ const iatifile = app.models['iati-file'];
 const googleStorageConfig = require('../../../common/config/google-storage');
 
 let mongoose = require('mongoose')
-mongoose.connect('mongodb://localhost:27017/local-validator', {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
 const monDataset = require('../../../common/mongoose/dataset');
 
 const SYNCDATE = new Date().toISOString();
 const DELTHRESHOLD = new Date(Date.now() - 10000).toISOString();
-
-let hashes = [];
-
-const findDuplicates = (arr) => {
-  let sorted_arr = arr.slice().sort(); // You can define the comparing function here. 
-  // JS by default uses a crappy string compare.
-  // (we use slice to clone the array so the
-  // original array won't be modified)
-  let results = [];
-  for (let i = 0; i < sorted_arr.length - 1; i++) {
-    if (sorted_arr[i + 1] == sorted_arr[i]) {
-      results.push(sorted_arr[i]);
-    }
-  }
-  return results;
-}
 
 const cloneFile = async (file) => {
   const sourceFile = await axios.get(file.internal_url, {
@@ -94,7 +78,6 @@ const fetchFiles = async () => {
   const filteredResults = _.chunk(filesDatastore, googleStorageConfig.datastore.workers);
 
   const processFile = async (file) => {
-    hashes.push(file.sha1)
     try {
       let where = {
         internal_url: file.internal_url,
@@ -149,17 +132,11 @@ const fetchFiles = async () => {
   await monDataset.deleteMany({lastseen: {$lt: DELTHRESHOLD}})
 
   console.log('datastore sync completed');
-
-  let dupes = findDuplicates(hashes);
-
-  console.log('dupe');
 };
-
-fetchFiles();
 
 console.log('datastore sync cron schedule:', googleStorageConfig.datastore.cronschedule);
 const job = schedule.scheduleJob(googleStorageConfig.datastore.cronschedule, () => {
-  //fetchFiles();
+  fetchFiles();
 });
 
 module.exports = {name: 'datastore', job};
