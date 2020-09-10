@@ -32,7 +32,7 @@ let datasetSchema = new mongoose.Schema({
   processing: {
     type: Date
   },
-  json_updated: {
+  "json-updated": {
     type: Date
   },
   lastseen: {

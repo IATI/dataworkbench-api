@@ -78,10 +78,8 @@ const getPublishers = async () => {
   console.log('registry sync completed');
 };
 
-getPublishers();
-
 const job = schedule.scheduleJob(googleStorageConfig.registry.cronschedule, () => {
-  //getPublishers();
+  getPublishers();
 });
 
 module.exports = {name: 'registry', job};
