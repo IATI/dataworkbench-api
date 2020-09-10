@@ -47,9 +47,6 @@ let datasetSchema = new mongoose.Schema({
   "svrl-updated": {
     type: Date
   },
-  "json-updated": {
-    type: Date
-  },
   sourceUrl: {
     type: String,
   },

@@ -3,10 +3,17 @@ const googleStorageConfig = require('../../common/config/google-storage');
 mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
 const monDataset = require('../../common/mongoose/dataset');
+const monTestDataset = require('../../common/mongoose/testdataset');
 
 module.exports = function(app) {
   app.get('/api/v1/queue/next', async function(req, res) {
-    let ds = await monDataset.findOne({ "processing" : { "$exists" : false }, "json-updated": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
+    let ds = await monDataset.findOne({"json-updated": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
+
+    return res.send(ds);
+  });
+
+  app.get('/api/v1/testqueue/next', async function(req, res) {
+    let ds = await monTestDataset.findOne({"json-updated": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
 
     return res.send(ds);
   });
