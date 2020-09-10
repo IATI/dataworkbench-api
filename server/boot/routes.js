@@ -35,9 +35,11 @@ module.exports = function(app) {
     }
 
     ds.processing = now;
-    await ds.save();
+    let updated = await ds.save();
 
-    return res.send(ds);
+    console.log('Updated dataset id ' + updated._id + ' to processing at ' + updated.processing);
+
+    return res.send(updated);
   });
 
   app.post('/api/v1/queue/processed', async function(req, res) {
@@ -64,8 +66,8 @@ module.exports = function(app) {
     }
 
     ds['json-updated'] = now;
-    await ds.save();
+    let updated = await ds.save();
 
-    return res.send(ds);
+    return res.send(updated);
   });
 }
