@@ -14,27 +14,13 @@ const iatifile = app.models['iati-file'];
 // TODO: rename googleStorageConfig to more generic config identifier
 const googleStorageConfig = require('../../../common/config/google-storage');
 
-const saveFileMetadata = (file) => new Promise((resolve, reject) => {
-  Dataset.create(new Dataset({
-    name: `${file.publisher.name}/${file.name}`,
-    url: file.source_url,
-    publisher: file.publisher.name,
-    filename: `${path.basename(file.source_url)}`,
-    updated: file.date_updated,
-    downloaded: file.date_updated,
-    created: file.date_created,
-    internal_url: file.internal_url,
-    sha1: file.sha1,
-    md5: file.md5,
-    origin: 'datastore',
-  }), (err, data) => {
-    if (err) {
-      return reject(err);
-    }
+let mongoose = require('mongoose')
+mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
-    resolve(data);
-  });
-});
+const monDataset = require('../../../common/mongoose/dataset');
+
+const SYNCDATE = new Date().toISOString();
+const DELTHRESHOLD = new Date(Date.now() - 10000).toISOString();
 
 const cloneFile = async (file) => {
   const sourceFile = await axios.get(file.internal_url, {
@@ -46,8 +32,6 @@ const cloneFile = async (file) => {
   });
 
   const md5hash = md5(sourceFile.data);
-
-  console.log('md5:', md5hash, 'for downloaded file:', file.internal_url);
 
   const fileStream = new stream.PassThrough();
 
@@ -82,11 +66,6 @@ const fetchDatastorePage = async (url) => {
 
 const fetchFiles = async () => {
   console.log('datastore sync starting');
-  const filesResponse =
-    await axios.get(`${googleStorageConfig.validator.api_url}/iati-datasets?filter={"where":{"sha1":{"exists":true}}}`);
-  const filesValidator = filesResponse.data;
-
-  console.log('number of datasets in the validator:', filesValidator.length);
 
   const filesDatastoreRaw = await fetchDatastorePage(`${googleStorageConfig.datastore.api_url
   }/datasets/?format=json&page=1&page_size=${
@@ -96,35 +75,61 @@ const fetchFiles = async () => {
   const filesDatastore = _.filter(filesDatastoreUrl,
     (o) => o.sha1 !== '');
 
-  const filesDiff = _.differenceWith(filesDatastore, filesValidator, (a, b) => a.sha1 === b.sha1);
-
-  console.log('number of datasets in the datastore (raw):', filesDatastoreRaw.length);
-  console.log('number of datasets in the datastore (with internal_url):', filesDatastoreUrl.length);
-  console.log('number of datasets in the datastore (with internal_url and sha1):', filesDatastore.length);
-  console.log('number of datasets to be retrieved (diff with validator):', filesDiff.length);
-
-  const filteredResults = _.chunk(filesDiff, googleStorageConfig.datastore.workers);
+  const filteredResults = _.chunk(filesDatastore, googleStorageConfig.datastore.workers);
 
   const processFile = async (file) => {
     try {
+      let where = {
+        internal_url: file.internal_url,
+        sha1: file.sha1,        
+      }
+
+      let ds = {
+        name: `${file.publisher.name}/${file.name}`,
+        url: file.source_url,
+        publisher: file.publisher.name,
+        filename: `${path.basename(file.source_url)}`,
+        updated: file.date_updated,
+        lastseen: SYNCDATE,
+        downloaded: file.date_updated,
+        created: file.date_created,
+        internal_url: file.internal_url,        
+      }
+      
+      let options = { upsert: false, useFindAndModify: false};
+
+      let record = await monDataset.findOneAndUpdate(where, ds, options)
+
+      if (record) {
+        return
+      }
+
       const md5hash = await cloneFile(file);
 
-      await saveFileMetadata({...file, md5: md5hash});
+      ds['md5'] = md5hash;
+      ds['sha1'] = file.sha1;
+      ds['internal_url'] = file.internal_url,
+
+      options = { upsert: true, new: true, useFindAndModify: false, setDefaultsOnInsert: true };
+
+      await monDataset.findOneAndUpdate(where, ds, options);
+
     } catch (err) {
-      console.error('File error: ', err.message, file.internal_url);
-    }
+      console.error('File error: ', err.message, file.internal_url, file.sha1);
+    } 
   };
 
   // eslint-disable-next-line
   for (const filesChunk of filteredResults) {
     try {
-      console.log('start batch of', googleStorageConfig.datastore.workers);
       // eslint-disable-next-line
       await Promise.all(filesChunk.map(processFile));
     } catch (err) {
       console.log('Error sending: ', err.message);
     }
   }
+
+  await monDataset.deleteMany({lastseen: {$lt: DELTHRESHOLD}})
 
   console.log('datastore sync completed');
 };

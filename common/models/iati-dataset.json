@@ -28,6 +28,9 @@
         "updated": {
           "exists": true
         },
+        "lastseen": {
+          "exists": true
+        },
         "svrl-updated": {
           "exists": true
         }
@@ -50,7 +53,6 @@
   "properties": {
     "id": {
       "type": "string",
-      "id": true,
       "defaultFn": "uuidv4"
     },
     "name": {
@@ -82,6 +84,10 @@
       "type": "date",
       "description": "Timestamp of latest update of the dataset record"
     },
+    "last-seen": {
+      "type": "date",
+      "description": "Timestamp of latest sync with the DS where the file was seen."
+    },
     "created": {
       "type": "date",
       "description": "Timestamp of created of the dataset record"
@@ -104,9 +110,7 @@
     },
     "sha1": {
       "type": "string",
-      "index": {
-        "unique": true
-      },
+      "required": true,
       "description": "Datastore hash"
     }
   },

@@ -4,7 +4,7 @@
     "connector": "loopback-component-storage",
     "maxFileSize": "250000000",
     "provider": "filesystem",
-    "root": "./test/tmp"
+    "root": "/home/alex/iatifs/tmp"
   },"iati-publishers": {
     "connector": "mongodb",
     "url": "mongodb://localhost/local-validator"
@@ -31,7 +31,7 @@
     "maxFileSize": "250000000",
     "nameConflict": "makeUnique",
     "provider": "filesystem",
-    "root": "./test/tmp"
+    "root": "/home/alex/iatifs/tmp"
   },
   "iati-testworkspaces": {
     "connector": "mongodb",
