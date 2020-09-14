@@ -1,16 +1,3 @@
-DataWorkbench API
-=================
-
-This is a Loopback application to provide an API for the DataWorkbench data.
-
-The application is currently "polymorphic" and can run in three different ways:
-
-* "public": suitable for public exposure, several API end points have been closed
-* "private": used inside the cluster, with all end points available
-* "datastore": used to run a regular synchronisation with the datastore
-
-The startup mode is determined by environment variables, see below.
-
 Development
 -----------
 
