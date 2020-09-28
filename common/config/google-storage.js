@@ -46,4 +46,11 @@ module.exports = {
     cronschedule: process.env.REGISTRY_CRONSCHEDULE ||
       '* 2 * * *',
   },
+
+  cleanup: {
+    api_url: process.env.CLEANUP_API_URL ||
+      'https://iativalidator.iatistandard.org/api/v1/iati-files/file/json/',
+    cronschedule: process.env.CLEANUP_CRONSCHEDULE ||
+      '1 1 * * *',
+  },
 };
