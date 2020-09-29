@@ -37,7 +37,8 @@ module.exports = {
     cronschedule: process.env.DATASTORE_CRONSCHEDULE ||
       '51 * * * *',
     workers: process.env.DATASTORE_WORKERS || 3,
-    mongourl: process.env.MONGOOSE_CONNECT || 'mongodb://localhost:27017/local-validator'
+    mongourl: process.env.MONGOOSE_CONNECT || 'mongodb://localhost:27017/local-validator',
+    noUrlThreshold: process.env.NO_URL_THRESHOLD || 100
   },
 
   registry: {
@@ -45,5 +46,12 @@ module.exports = {
       'https://iatiregistry.org/api/3',
     cronschedule: process.env.REGISTRY_CRONSCHEDULE ||
       '* 2 * * *',
+  },
+
+  cleanup: {
+    api_url: process.env.CLEANUP_API_URL ||
+      'https://iativalidator.iatistandard.org/api/v1/iati-files/file/json/',
+    cronschedule: process.env.CLEANUP_CRONSCHEDULE ||
+      '1 1 * * *',
   },
 };
