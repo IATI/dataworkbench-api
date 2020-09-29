@@ -72,6 +72,14 @@ const fetchFiles = async () => {
     googleStorageConfig.datastore.pagesize}`);
   const filesDatastoreUrl = _.filter(filesDatastoreRaw,
     (o) => o.internal_url != null);
+
+  let recordsWithoutUrl = filesDatastoreRaw.length - filesDatastoreUrl.length;
+
+  if ( recordsWithoutUrl > googleStorageConfig.datastore.noUrlThreshold) {
+    console.warn(recordsWithoutUrl + ' records without an internal_url field returned from the DS API, probably inferring a bug their end - skipping the sync.');
+    return;
+  }
+
   const filesDatastore = _.filter(filesDatastoreUrl,
     (o) => o.sha1 !== '');
 
