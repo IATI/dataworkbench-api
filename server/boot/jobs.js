@@ -6,5 +6,6 @@ if (process.env.RUN_JOBS === 'run') {
   // eslint-disable-next-line
   require('./jobs/datastore');
   require('./jobs/registry');
+  require('./jobs/statsgenerator');
   //require('./jobs/cleanup');
 }
