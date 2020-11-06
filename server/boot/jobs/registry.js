@@ -10,17 +10,13 @@ const Version = app.models['version'];
 // TODO: rename googleStorageConfig to more generic config identifier
 const googleStorageConfig = require('../../../common/config/google-storage');
 
-const getPaginatedRequest = async ({ offset, limit }, response = []) => {
+const getPaginatedRequest = async (url, { offset, limit }, response = []) => {
   try {
-    let result = await axios.get(
-      googleStorageConfig.registry.api_url 
-      +'/action/organization_list'
-      + `?offset=${offset}&limit=${limit}`
-    );
+    let result = await axios.get(url + `?offset=${offset}&limit=${limit}`);
     if (result.data.success && result.data.result.length !== 0) {
           response = response.concat(result.data.result);
           offset += limit;
-          return await getPaginatedRequest( { offset, limit }, response)
+          return await getPaginatedRequest(url, { offset, limit }, response)
     } else {
       return response
     }
@@ -31,7 +27,10 @@ const getPaginatedRequest = async ({ offset, limit }, response = []) => {
 
 const getPublishers = async () => {
   console.log('registry sync starting');
-  const organisationList = await getPaginatedRequest({ offset: 0, limit: 1000})
+  const organisationList = await getPaginatedRequest(
+    googleStorageConfig.registry.api_url + '/action/organization_list',
+    { offset: 0, limit: 1000}
+  )
   let existing = await Publisher.find({},{slug:1,_id:0});
 
   for (let n=0; n<existing.length; n++) {
@@ -87,7 +86,6 @@ const getPublishers = async () => {
 
   console.log('registry sync completed');
 };
-getPublishers();
 const job = schedule.scheduleJob(googleStorageConfig.registry.cronschedule, () => {
   getPublishers();
 });

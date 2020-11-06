@@ -28,7 +28,8 @@
             "program": "${workspaceRoot}/server/server.js",
             "env": {
                 "NODE_ENV": "sandbox",
-                "API_TYPE": "public"
+                "API_TYPE": "public",
+                // "RUN_JOBS": "run" // un-comment to run boot jobs
             },
             "restart": true,
             "console": "integratedTerminal",
