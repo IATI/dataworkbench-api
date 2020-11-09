@@ -56,7 +56,7 @@ module.exports = {
   },
 
   stats: {
-    cronschedule: process.env.CLEANUP_CRONSCHEDULE ||
+    cronschedule: process.env.STATS_CRONSCHEDULE ||
       '1 1 * * *',
   },
 };
