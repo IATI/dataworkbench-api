@@ -4,8 +4,26 @@ mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true,
 
 const monDataset = require('../../common/mongoose/dataset');
 const monTestDataset = require('../../common/mongoose/testdataset');
+const monPublisherStats = require('../../common/mongoose/publisherstats');
 
 module.exports = function(app) {
+  app.get('/api/v1/stats/:publisher', async function(req, res) {
+
+    let where = { "publisher": req.params.publisher };
+
+    if (req.query.start) {
+      where['date'] = { $gte: req.query.start };
+    }
+
+    if (req.query.end) {
+      where['date'] = { $lte: req.query.end };
+    }
+
+    let stats = await monPublisherStats.find(where).sort({ 'date' : "asc"});
+
+    return res.send(stats);
+  });
+
   app.get('/api/v1/queue/next', async function(req, res) {
     let ds = await monDataset.findOne({"json-updated": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
 
