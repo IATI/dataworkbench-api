@@ -31,7 +31,7 @@ const generate = async () => {
 
     for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {       
       try {
-        let report = await axios.get('https://iativalidator.iatistandard.org/api/v1/iati-files/file/json/' + doc.md5 + '.json');
+        let report = await axios.get(googleStorageConfig.stats.api_url + doc.md5 + '.json');
 
         for (let key in report.data.summary) {
           if ( !(key in summaryTotal)) {
@@ -64,6 +64,7 @@ const generate = async () => {
         }
       } catch (error) {
         console.error('Error getting report for ' + doc.md5);
+        console.error(error.message);
       }
     }
 
