@@ -10,6 +10,7 @@ mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true,
 const app = require('../../server');
 const monDataset = require('../../../common/mongoose/dataset');
 const monPublisherStats = require('../../../common/mongoose/publisherstats');
+const monAggregateStats = require('../../../common/mongoose/aggregatestats');
 const Publisher = app.models['iati-publisher'];
 
 const generate = async () => {
@@ -27,7 +28,7 @@ const generate = async () => {
     let messagesTotal = {};
 
     console.log('Generating stats for ' + publisher.name);
-    const cursor = monDataset.find({'publisher': publisher.slug, 'json-updated': { $exists: true, $ne: null }}).cursor();
+    let cursor = monDataset.find({'publisher': publisher.slug, 'json-updated': { $exists: true, $ne: null }}).cursor();
 
     for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {       
       try {
@@ -65,6 +66,7 @@ const generate = async () => {
       } catch (error) {
         console.error('Error getting report for ' + doc.md5);
         console.error(error.message);
+        console.error(googleStorageConfig.stats.api_url + doc.md5 + '.json');
       }
     }
 
@@ -82,8 +84,56 @@ const generate = async () => {
     await monPublisherStats.findOneAndUpdate(where, stats, options)
   }
 
+  console.log('Base stats generated, doing the aggregates...');
+
+  // Aggregate from the base stats
+  let cursor = await monPublisherStats.find({date: date}).cursor();
+
+  let count = 0;
+  let sumSummaryStats = {}
+
+  //Sum the summary
+  for (let stat = await cursor.next(); stat != null; stat = await cursor.next()) {
+
+    count++;
+
+    if (stat.publisher === "usaid") {
+      let brake = true;
+    }
+
+    for (let key in stat.summaryStats) {
+      if ( !(key in sumSummaryStats)) {
+        sumSummaryStats[key] = 0;
+      }
+
+      sumSummaryStats[key] += stat.summaryStats[key];
+    }
+   
+  }
+
+  let avgSummaryStats = {};
+
+  //Do the averages
+  for (let key in sumSummaryStats) {
+    let average = sumSummaryStats[key] / count;
+    avgSummaryStats[key] = average.toFixed(4);   
+  }
+
+  let stats = {
+    publishers: count,
+    sum: sumSummaryStats,
+    average: avgSummaryStats
+  }
+
+  let options = { upsert: true };
+  let where = { date: date };
+
+  await monAggregateStats.findOneAndUpdate(where, stats, options)
+
   console.log('stats generated');
 };
+
+  generate();
 
 const job = schedule.scheduleJob(googleStorageConfig.stats.cronschedule, () => {
   generate();
