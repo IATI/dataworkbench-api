@@ -41,6 +41,10 @@ const generate = async () => {
 
           summaryTotal[key] += report.data.summary[key]
         }
+
+        if (! ('activities' in report.data)) {
+          continue;
+        }
         
         for (let n = 0; n < report.data.activities.length; n++) {
           for (let o = 0; o < report.data.activities[n].feedback.length; o++) {
@@ -64,7 +68,7 @@ const generate = async () => {
           }
         }
       } catch (error) {
-        console.error('Error getting report for ' + doc.md5);
+        console.error('Error for doc ' + doc.md5 + ', publisher: ' + doc.publisher);
         console.error(error.message);
         console.error(googleStorageConfig.stats.api_url + doc.md5 + '.json');
       }
