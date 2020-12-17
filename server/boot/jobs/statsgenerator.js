@@ -19,7 +19,7 @@ const generate = async () => {
   let now = new Date();
   let date = now.toISOString().split('T')[0];  
 
-  const publishers = await Publisher.find({},{slug:1,_id:0});
+  const publishers = await Publisher.find({where: {state: "active", datasets: {gt: 0}}});
 
   for (let i = 0; i < publishers.length; i++) {
     let publisher = publishers[i];
