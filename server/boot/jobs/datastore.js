@@ -99,6 +99,7 @@ const fetchFiles = async () => {
         filename: `${path.basename(file.source_url)}`,
         updated: file.date_updated,
         lastseen: SYNCDATE,
+        received: new Date().toISOString(),
         downloaded: file.date_updated,
         created: file.date_created,
         internal_url: file.internal_url,        

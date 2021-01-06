@@ -143,9 +143,53 @@ module.exports = function(app) {
   }); 
 
   app.get('/api/v1/queue/next', async function(req, res) {
-    let ds = await monDataset.findOne({"json-updated": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
+    let ds = await monDataset.findOne({"json-updated": { "$exists" : false }, "received": { "$exists" : true }}).sort({ 'received' : "asc"});
 
+    if (ds === null) {
+      ds = await monDataset.findOne({"json-updated": { "$exists" : false }, "received": { "$exists" : false }}).sort({ 'downloaded' : "asc"});
+    }
+    
     return res.send(ds);
+  });
+
+  app.get('/api/v1/queue/length', async function(req, res) {
+    let count = await monDataset.countDocuments({"json-updated": { "$exists" : false }})
+
+    let last = await monDataset.findOne({"json-updated": { "$exists" : true }, "received": { "$exists" : true }}).sort({ 'json-updated' : "desc"});
+
+    let diff = Math.abs(last['received'].getTime() - last['json-updated'].getTime());
+
+    let ms = diff % 1000;
+    diff = (diff - ms) / 1000;
+    let secs = diff % 60;
+    diff = (diff - secs) / 60;
+    let mins = diff % 60;
+    let hrs = (diff - mins) / 60;
+
+    let hourStr = 'hours'
+    let minStr = 'minutes'
+    let secStr = 'seconds'
+
+    if (hrs == 1) {
+      hourStr = 'hour'
+    }
+    if (mins == 1) {
+      minStr = 'minute'
+    }
+    if (secs == 1) {
+      secStr = 'second'
+    }
+
+    let diffString = ''
+
+    if (hrs > 0) {
+      diffString = diffString + hrs + ' ' + hourStr + ', ';
+    }
+    
+    diffString = diffString + mins + ' ' + minStr + ' and ' + secs + ' ' + secStr;
+
+
+    return res.send({'count': count, 'time': diffString});
   });
 
   app.get('/api/v1/testqueue/next', async function(req, res) {

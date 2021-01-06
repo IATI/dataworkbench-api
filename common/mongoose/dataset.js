@@ -38,6 +38,9 @@ let datasetSchema = new mongoose.Schema({
   lastseen: {
     type: Date
   },
+  received: {
+    type: Date
+  },
   created: {
     type: Date
   },
