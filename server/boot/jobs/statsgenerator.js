@@ -137,8 +137,6 @@ const generate = async () => {
   console.log('stats generated');
 };
 
-  generate();
-
 const job = schedule.scheduleJob(googleStorageConfig.stats.cronschedule, () => {
   generate();
 });
