@@ -99,7 +99,6 @@ const fetchFiles = async () => {
         filename: `${path.basename(file.source_url)}`,
         updated: file.date_updated,
         lastseen: SYNCDATE,
-        received: new Date().toISOString(),
         downloaded: file.date_updated,
         created: file.date_created,
         internal_url: file.internal_url,        
@@ -118,6 +117,7 @@ const fetchFiles = async () => {
       ds['md5'] = md5hash;
       ds['sha1'] = file.sha1;
       ds['internal_url'] = file.internal_url,
+      ds['received'] = new Date().toISOString(),
 
       options = { upsert: true, new: true, useFindAndModify: false, setDefaultsOnInsert: true };
 
