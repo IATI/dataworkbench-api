@@ -19,9 +19,6 @@ mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true,
 
 const monDataset = require('../../../common/mongoose/dataset');
 
-const SYNCDATE = new Date().toISOString();
-const DELTHRESHOLD = new Date(Date.now() - 10000);
-
 const cloneFile = async (file) => {
   const sourceFile = await axios.get(file.internal_url, {
     responseType: 'arraybuffer',
@@ -66,6 +63,9 @@ const fetchDatastorePage = async (url) => {
 
 const fetchFiles = async () => {
   console.log('datastore sync starting');
+
+  const SYNCDATE = new Date().toISOString();
+  const DELTHRESHOLD = new Date(Date.now() - 10000);
 
   const filesDatastoreRaw = await fetchDatastorePage(`${googleStorageConfig.datastore.api_url
   }/datasets/?format=json&page=1&page_size=${
