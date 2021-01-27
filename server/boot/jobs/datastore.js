@@ -138,12 +138,15 @@ const fetchFiles = async () => {
     }
   }
 
+  console.log('DELTHRESHOLD = ' + DELTHRESHOLD)
+
   await monDataset.deleteMany({lastseen: {$lt: DELTHRESHOLD}})
 
   console.log('datastore sync completed');
 };
 
 console.log('datastore sync cron schedule:', googleStorageConfig.datastore.cronschedule);
+
 const job = schedule.scheduleJob(googleStorageConfig.datastore.cronschedule, () => {
   fetchFiles();
 });
