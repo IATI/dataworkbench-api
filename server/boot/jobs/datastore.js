@@ -19,9 +19,6 @@ mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true,
 
 const monDataset = require('../../../common/mongoose/dataset');
 
-const SYNCDATE = new Date().toISOString();
-const DELTHRESHOLD = new Date(Date.now() - 10000).toISOString();
-
 const cloneFile = async (file) => {
   const sourceFile = await axios.get(file.internal_url, {
     responseType: 'arraybuffer',
@@ -66,6 +63,9 @@ const fetchDatastorePage = async (url) => {
 
 const fetchFiles = async () => {
   console.log('datastore sync starting');
+
+  const SYNCDATE = new Date().toISOString();
+  const DELTHRESHOLD = new Date(Date.now() - 10000);
 
   const filesDatastoreRaw = await fetchDatastorePage(`${googleStorageConfig.datastore.api_url
   }/datasets/?format=json&page=1&page_size=${
@@ -117,6 +117,7 @@ const fetchFiles = async () => {
       ds['md5'] = md5hash;
       ds['sha1'] = file.sha1;
       ds['internal_url'] = file.internal_url,
+      ds['received'] = new Date().toISOString(),
 
       options = { upsert: true, new: true, useFindAndModify: false, setDefaultsOnInsert: true };
 
@@ -137,12 +138,15 @@ const fetchFiles = async () => {
     }
   }
 
+  console.log('DELTHRESHOLD = ' + DELTHRESHOLD)
+
   await monDataset.deleteMany({lastseen: {$lt: DELTHRESHOLD}})
 
   console.log('datastore sync completed');
 };
 
 console.log('datastore sync cron schedule:', googleStorageConfig.datastore.cronschedule);
+
 const job = schedule.scheduleJob(googleStorageConfig.datastore.cronschedule, () => {
   fetchFiles();
 });

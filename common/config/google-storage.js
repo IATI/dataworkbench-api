@@ -49,9 +49,16 @@ module.exports = {
   },
 
   cleanup: {
-    api_url: process.env.CLEANUP_API_URL ||
+    api_url: process.env.FILE_API_URL ||
       'https://iativalidator.iatistandard.org/api/v1/iati-files/file/json/',
     cronschedule: process.env.CLEANUP_CRONSCHEDULE ||
+      '1 1 * * *',
+  },
+
+  stats: {
+    api_url: process.env.FILE_API_URL ||
+    'https://iativalidator.iatistandard.org/api/v1/iati-files/file/json/',
+    cronschedule: process.env.STATS_CRONSCHEDULE ||
       '1 1 * * *',
   },
 };
