@@ -19,8 +19,8 @@ mongoose.connect(googleStorageConfig.datastore.mongourl, {useNewUrlParser: true,
 
 const monDataset = require('../../../common/mongoose/dataset');
 
-const cloneFile = async (file) => {
-  const sourceFile = await axios.get(file.internal_url, {
+const cloneFile = async (url) => {
+  const sourceFile = await axios.get(url, {
     responseType: 'arraybuffer',
     timeout: 15 * 1000,
     httpsAgent: new https.Agent({
@@ -62,46 +62,34 @@ const fetchDatastorePage = async (url) => {
 };
 
 const fetchFiles = async () => {
-  console.log('datastore sync starting');
+console.log('datastore sync starting');
 
   const SYNCDATE = new Date().toISOString();
   const DELTHRESHOLD = new Date(Date.now() - 10000);
+  const STORAGE_URL = 'https://iatiprod.blob.core.windows.net/source/';
 
-  const filesDatastoreRaw = await fetchDatastorePage(`${googleStorageConfig.datastore.api_url
-  }/datasets/?format=json&page=1&page_size=${
-    googleStorageConfig.datastore.pagesize}`);
-  const filesDatastoreUrl = _.filter(filesDatastoreRaw,
-    (o) => o.internal_url != null);
+  const filesDatastore = await axios.get(`https://prod-func-validator-services.azurewebsites.net/api/pub/dsdocs?code=axUOQoQmHdIElUn2L6wic9/fuea/uJNFfyFtw7PWIoVav15KIhRscg==`);
 
-  let recordsWithoutUrl = filesDatastoreRaw.length - filesDatastoreUrl.length;
-
-  if ( recordsWithoutUrl > googleStorageConfig.datastore.noUrlThreshold) {
-    console.warn(recordsWithoutUrl + ' records without an internal_url field returned from the DS API, probably inferring a bug their end - skipping the sync.');
-    return;
-  }
-
-  const filesDatastore = _.filter(filesDatastoreUrl,
-    (o) => o.sha1 !== '');
-
-  const filteredResults = _.chunk(filesDatastore, googleStorageConfig.datastore.workers);
+  const filteredResults = _.chunk(filesDatastore.data, googleStorageConfig.datastore.workers);
 
   const processFile = async (file) => {
+    const internal_url = STORAGE_URL + file.hash + '.xml'
     try {
       let where = {
-        internal_url: file.internal_url,
-        sha1: file.sha1,        
+        internal_url: internal_url,
+        sha1: file.hash  
       }
 
       let ds = {
-        name: `${file.publisher.name}/${file.name}`,
-        url: file.source_url,
-        publisher: file.publisher.name,
-        filename: `${path.basename(file.source_url)}`,
+        name: `${file.publisher_name}/${file.name}`,
+        url: file.url,
+        publisher: file.publisher_name,
+        filename: `${path.basename(file.url)}`,
         updated: file.date_updated,
         lastseen: SYNCDATE,
         downloaded: file.date_updated,
         created: file.date_created,
-        internal_url: file.internal_url,        
+        internal_url: internal_url,        
       }
       
       let options = { upsert: false, useFindAndModify: false};
@@ -112,11 +100,11 @@ const fetchFiles = async () => {
         return
       }
 
-      const md5hash = await cloneFile(file);
+      const md5hash = await cloneFile(internal_url);
 
       ds['md5'] = md5hash;
-      ds['sha1'] = file.sha1;
-      ds['internal_url'] = file.internal_url,
+      ds['sha1'] = file.hash;
+      ds['internal_url'] = internal_url,
       ds['received'] = new Date().toISOString(),
 
       options = { upsert: true, new: true, useFindAndModify: false, setDefaultsOnInsert: true };
@@ -124,7 +112,7 @@ const fetchFiles = async () => {
       await monDataset.findOneAndUpdate(where, ds, options);
 
     } catch (err) {
-      console.error('File error: ', err.message, file.internal_url, file.sha1);
+      console.error('File error: ', err.message, internal_url, file.hash);
     } 
   };
 
@@ -147,8 +135,11 @@ const fetchFiles = async () => {
 
 console.log('datastore sync cron schedule:', googleStorageConfig.datastore.cronschedule);
 
+fetchFiles();
+
 const job = schedule.scheduleJob(googleStorageConfig.datastore.cronschedule, () => {
   fetchFiles();
 });
 
 module.exports = {name: 'datastore', job};
+
